@@ -22,4 +22,4 @@ who wants to do that manually?
 
 Enter your adb device address in `sid` variable
 
-Run
+Run main.py
