@@ -5,15 +5,27 @@ import shutil
 import phrases
 from PIL import Image
 
-sid = "127.0.0.1:5555"
+baseaddr = "127.0.0.1"
+port_min = 5555
+port_max = 5560
+sid = "127.0.0.1:5556"
 
 speech_W = 360
 speech_H = 335
 speech_L = 720
 speech_T = 315
 
-speech_vcdelta = 100
+nextcell_X = 1025
+nextcell_Y = 1060
+cell_X = 615
+cell_Y = 1060
+DELAY_NEXTCELL = 1000 / 1000
+FAIL_THRESHOLD = 5
+INTERROGATION_MIN = 10
+INTERROGATION_MAX = 17
 
+speech_vcdelta = 100
+start_failed = False
 reh_W = 516
 reh_H = 80
 reh_L = 294
@@ -72,16 +84,30 @@ DELAY_MID = 100 / 1000
 
 
 def call(cmd):
-    os.system('cmd /c "{command}"'.format(command=cmd))
+    return os.popen('cmd /c "{command}"'.format(command=cmd)).read()
+    
 
-def connect():    
-    call("adb connect {sid}".format(sid=sid))
+def connect_http():
+    global sid
+    for port in range(port_min, port_max):
+        sid = "{}:{}".format(baseaddr, port)
+        res = call("adb connect {sid}".format(sid=sid))
+        if res.startswith("connected") or res.startswith("already"):
+            print("Connected to [{}]".format(sid))
+            return
+    print("Could not find a local instance to connect to.")
 
 def back():
     call("adb -s {sid} shell input keyevent 4".format(sid=sid))
 
 def tap(x,y):
     call("adb -s {sid} shell input tap {x} {y}".format(sid=sid,x=x,y=y))
+
+def next_prisoner():
+    tap(nextcell_X, nextcell_Y)
+    time.sleep(DELAY_NEXTCELL)
+    tap(cell_X, cell_Y)
+    time.sleep(DELAY_NEXTCELL)
 
 def pacify():
     tap(pacify_X, pacify_Y)
@@ -100,7 +126,6 @@ def swipe(x1,y1,x2,y2,delay=M_DELAY):
 
 def capture_screen(name):
     call("adb -s {sid} exec-out screencap -p > {name}".format(sid=sid, name=name))
-
 
 def crop(file_in, file_out, w, h, l, t):
     call("gm convert {f_in} -crop {w}x{h}+{l}+{t} {f_out}".format(f_in = file_in, f_out=file_out, w=w, h=h, l=l, t=t))
@@ -154,9 +179,15 @@ def get_inter(fn):
     try:
         if len(inter_sp) > 1:
             inter_max = int(phrases.do(inter_sp[1]))
+            if (inter_max > INTERROGATION_MAX or inter_max < INTERROGATION_MIN):
+                print("Interrogations out of range: "+inter)
+                return False
             left = inter_sp[0].split(':')
             if len(left) > 1:            
-                inter_curr = int(phrases.do(left[1]))            
+                inter_curr = int(phrases.do(left[1]))
+                if (inter_curr > INTERROGATION_MAX):
+                    print("Interrogations out of range: "+inter)
+                    return False
             else:
                 print("Could not parse interrogations: "+inter)
                 return False
@@ -224,7 +255,7 @@ def do_action(speech):
     return acted
 
 def act(first_time):
-    global rehab_max, rehab_curr, inter_curr, inter_max
+    global rehab_max, rehab_curr, inter_curr, inter_max, start_failed
     ts = time.time()
     shutil.rmtree("./inter/")
     os.mkdir("./inter/")
@@ -243,11 +274,17 @@ def act(first_time):
     time.sleep(DELAY_SAVEFILE)
     print("done.")
     if first_time:
+        fail_count = 0
         print("[Reading interrogation status]")
-        while not get_inter(fn):
+        while not get_inter(fn) and fail_count < FAIL_THRESHOLD:
+            fail_count += 1
             capture_screen(fn)
             time.sleep(DELAY_SAVEFILE)
             print("Retrying...")
+        if (fail_count >= FAIL_THRESHOLD):
+            start_failed = True
+            print("Failed to start.")
+            return True
         print("[Reading rehabilitation status]")
         while not get_rehab(fn):
             capture_screen(fn)
@@ -335,13 +372,24 @@ def prompt(query):
         str = input(query).lower()
     return str == "y"
 
-connect()
+connect_http()
+
+multiple = prompt("Multi-cell drifting? [y/n]:")
+
 another = True
 while another:
     ft = True
-    input("Press enter to start...")
     while not act(ft):
         ft = False
         time.sleep(DELAY_MID)
-    another = prompt("Another? [y/n]:")
+    if not multiple:
+        another = prompt("Another? [y/n]:")
+    else:              
+        another = not start_failed
+        if another:
+            time.sleep(DELAY_NEXTCELL)
+            next_prisoner()
+        
+        
+
 
