@@ -3,7 +3,7 @@ who wants to do that manually?
 
 ## Prerequisites 
 
-### python3
+### [python3](https://www.python.org/)
 
 ### pip packages:
 
