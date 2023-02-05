@@ -385,10 +385,12 @@ while another:
     if not multiple:
         another = prompt("Another? [y/n]:")
     else:              
-        another = not start_failed
+        another = not start_failed        
         if another:
             time.sleep(DELAY_NEXTCELL)
             next_prisoner()
+        else:
+            another = prompt("Try again? [y/n]:")
         
         
 
