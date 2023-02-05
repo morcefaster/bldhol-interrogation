@@ -34,3 +34,9 @@ Multi-cell drifting:
 - yes: after finishing the current prisoner, go to next cell
 
 - no: after finishing the current prisoner, get prompted for another
+
+## Notes
+
+- Male lux is ass. His interrogation numbers are hard to OCR due to his clothes. Might have to repeat several times.
+
+- Bugs are present, but whatever.
