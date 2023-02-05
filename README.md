@@ -3,6 +3,7 @@ who wants to do that manually?
 
 ## Prerequisites 
 
+### [python3](https://www.python.org/)
 
 ### pip packages:
 
@@ -27,3 +28,15 @@ Enter your adb device address in `sid` variable
 Coordinates should match for any 1080p screen (bluestacks default), but if not, adjust as neeeded
 
 Run main.py
+
+Multi-cell drifting:
+
+- yes: after finishing the current prisoner, go to next cell
+
+- no: after finishing the current prisoner, get prompted for another
+
+## Notes
+
+- Male lux is ass. His interrogation numbers are hard to OCR due to his clothes. Might have to repeat several times.
+
+- Bugs are present, but whatever.
