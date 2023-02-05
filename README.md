@@ -25,6 +25,8 @@ Enable adb on device/emulator
 
 Enter your adb device address in `sid` variable
 
+(Actually, fix some code around it if needed. It's currently bluestacks-oriented)
+
 Coordinates should match for any 1080p screen (bluestacks default), but if not, adjust as neeeded
 
 Run main.py
